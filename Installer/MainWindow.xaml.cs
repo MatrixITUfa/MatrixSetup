@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Installer
 {
@@ -28,7 +30,8 @@ namespace Installer
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-           
+            
+            Main.Content = new Redis();
         }
 
         private void selectfile_btn_Click(object sender, RoutedEventArgs e)
@@ -46,18 +49,23 @@ namespace Installer
 
         private void btn_test_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process TestProcess = new System.Diagnostics.Process();
-            
-            TestProcess.StartInfo.Verb = "runas";
-            //TestProcess = System.Diagnostics.Process.Start("notepad.exe", "");
-            TestProcess = System.Diagnostics.Process.Start("C:\\Users\\user\\source\\repos\\Installer\\Installer\\resfiles\\jre-8u321-windows-x64.exe", "INSTALLCFG=C:\\Users\\user\\source\\repos\\Installer\\Installer\\resfiles\\config.txt");
+            InstallUnit Java = new InstallUnit("jre - 8u321 - windows - x64.exe INSTALLCFG =\"%cd%\\config.cfg\"");//установка Java через класс InstallUnit
+            Java.CmdInstall();
         }
 
-        private void btn_javainstall_Click(object sender, RoutedEventArgs e)
+        
+
+        
+
+        private void btn_testNeo4j_Click(object sender, RoutedEventArgs e)
         {
-            Java javainastall = new Java();
-            if (txtbox_javapath.Text != String.Empty) javainastall.Path = txtbox_javapath.Text;
-            javainastall.InstallJava();
+            InstallUnit Neo4j = new InstallUnit("cd neo4j - community - 3.2.1\ncd bin\nneo4j install - service\nneo4j start");//установка Neo4j через класс InstallUnit
+            Neo4j.CmdInstall();
+        }
+
+        private void btn_location_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(Directory.GetCurrentDirectory());
         }
     }
 }
