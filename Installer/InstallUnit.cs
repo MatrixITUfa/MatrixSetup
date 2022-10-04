@@ -18,6 +18,8 @@ using System.Reflection;
 
 namespace Installer
 {
+    //public delegate void ProgressBarHandler(string taskName);
+    
     public class InstallUnit
     {
         private string path;//путь из коготорого запускаются установочные файлы // для запуска из cmd
@@ -26,35 +28,39 @@ namespace Installer
         private string startarg;//аргументы при запуске файла 
         private bool write;//true - вводит нужные текстовые данные(обычно команды) в запущенной программе(обычно в cmd), false - не вводит
         private string writearg;//все текстовые данные, которые вводятся 
-        
+        public string taskName;//имя процесса для отображения пользователю
+        //public static ProgressBarHandler Notify;
         public InstallUnit()
         {
             Path =  Directory.GetCurrentDirectory();
         }
-        public InstallUnit(string arg1) : this()//конструктор с аргументом для командной строки, путь где находятся файлы это одна директория с установщиком
+
+        public InstallUnit(string Arg, string taskName) : this()//конструктор с аргументом для командной строки, путь где находятся файлы это одна директория с установщиком
         {
-            Arg = arg1;
+            //this.Notify = Notify;
+            this.taskName = taskName;
+            this.Arg = Arg;
             filename = "cmd.exe";
             startarg = "";
             write = true;
-            writearg = "pushd " + Path + "\ncd resfiles\n" + Arg;
+            writearg = "chcp 1251 pushd " + this.Path + "\newcd resfiles\new" + this.Arg;
         }
-        public InstallUnit(string arg1,string filename1, string startarg1) : this(arg1) // startarg это аргументы запуска
+        public InstallUnit(string Arg,string filename, string startarg, string taskName) : this(Arg, taskName) // startarg это аргументы запуска
         {
-            filename = filename1;
-            startarg = startarg1;
+            this.filename = filename;
+            this.startarg = startarg;
             write = true;
-            writearg = "pushd " + Path + "\ncd resfiles\n" + Arg;//was writearg = "pushd " + Path + "\n cd ..\n cd ..\n cd ..\ncd resfiles\n" + Arg;
+            writearg = "chcp 1251 pushd " + this.Path + "\newcd resfiles\new" + this.Arg;//was writearg = "pushd " + Path + "\n cd ..\n cd ..\n cd ..\ncd resfiles\n" + Arg;
         }
         
-        public InstallUnit(string arg1, string filename1, string startarg1, bool write1) : this(arg1, filename1, startarg1)
+        public InstallUnit(string Arg, string filename, string startarg, bool write, string taskName) : this(Arg, filename, startarg, taskName)
         {
-            write = write1;//при write == false теряют смысл в существовании поля writearg, Path, Arg 
-            writearg = "pushd " + Path + "\ncd resfiles\n" + Arg;//was writearg = "pushd " + Path + "\n cd ..\n cd ..\n cd ..\ncd resfiles\n" + Arg;
+            this.write = write;//при write == false теряют смысл в существовании поля writearg, Path, Arg 
+            writearg = "chcp 1251 pushd " + this.Path + "\newcd resfiles\new" + this.Arg;//was writearg = "pushd " + Path + "\n cd ..\n cd ..\n cd ..\ncd resfiles\n" + Arg;
         }
-        public InstallUnit(string arg1, string filename1, string startarg1, bool write1,string writearg1) : this(arg1, filename1, startarg1, write1)
+        public InstallUnit(string Arg, string filename, string startarg, bool write,string writearg, string taskName) : this(Arg, filename, startarg, write, taskName)
         {
-            writearg = writearg1;
+            this.writearg = writearg;
         }
         
         public string Path//путь к директории, в которой хранятся установочные файлы
@@ -78,16 +84,17 @@ namespace Installer
             {
                 arg = value;   // устанавливаем новое значение свойства
             }
-
         }
-        
-
-        public virtual void CmdInstall()//установка через командую строку
+     
+        public virtual void CmdRun()//установка через командую строку
         {
+            //Notify.Invoke(taskName);
+            
+            //вызов события // в событие передается имя задачи и то, насколько заполняется прогрессбар
             Process cmd = new Process();
             cmd.StartInfo.FileName = filename;//изменяемое// обычно это "cmd.exe"
             cmd.StartInfo.Verb = "runas";//права администратора
-            cmd.StartInfo.Arguments = startarg;//изменяемое// обычно ""
+            cmd.StartInfo.Arguments = startarg;//изменяемое// обычно "" еще /K
             cmd.StartInfo.RedirectStandardInput = true;
             cmd.StartInfo.RedirectStandardOutput = true;
             cmd.StartInfo.CreateNoWindow = true;//выполнение без открытия окна // обычно true
@@ -96,7 +103,13 @@ namespace Installer
             
             if (write == true)
             {
-                cmd.StandardInput.WriteLine(writearg);//переход в директорию resfiles и ввод комманд в командную строку или другую программу
+                string[] writeargSplit;
+                writeargSplit = writearg.Split("\new");
+                foreach(string arg in writeargSplit) 
+                {
+                    cmd.StandardInput.WriteLine(arg);//ввод комманд в командную строку или другую программу
+                }
+                
                 cmd.StandardInput.Flush();
                 cmd.StandardInput.Close();
                 cmd.WaitForExit();
@@ -105,7 +118,7 @@ namespace Installer
             //Process Currentprocess = Process.GetCurrentProcess();//отладочный вывод
             //Debug.WriteLine(Currentprocess.ToString() + "нужный процесс");//отладочный вывод
             
-            //cmd.Close();
+            
         }
     }
 }
